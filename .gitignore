@@ -1,0 +1,3 @@
+*.postman_environment.local.json
+.env
+*.log
