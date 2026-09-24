@@ -1,0 +1,255 @@
+{
+  "info": {
+    "_postman_id": "31b18178-4967-4ba0-a2f6-4e8c0d1e25d4",
+    "name": "SMSMobileAPI",
+    "description": "Test SMS, connected devices, calls, WhatsApp, notifications and e-mail through a real connected mobile. Documentation: https://smsmobileapi.com/documentations-api-smsmobileapi/",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('HTTP status is successful', function () {",
+          "  pm.expect(pm.response.code).to.be.within(200, 299);",
+          "});"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "SMS",
+      "description": "Send through a connected mobile, retrieve replies and inspect sent logs.",
+      "item": [
+        {
+          "name": "Send SMS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "const id = body && body.result && body.result.id;",
+                  "if (id) pm.environment.set('lastMessageId', id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "apikey", "value": "{{apiKey}}", "type": "text" },
+                { "key": "recipients", "value": "{{recipient}}", "type": "text" },
+                { "key": "message", "value": "Hello from the SMSMobileAPI Postman collection.", "type": "text" },
+                { "key": "sIdentifiant", "value": "{{deviceSid}}", "type": "text", "disabled": true }
+              ]
+            },
+            "url": "{{baseUrl}}/sendsms/",
+            "description": "Queues an SMS on the connected mobile. A successful response means the job was accepted; mobile processing is asynchronous."
+          }
+        },
+        {
+          "name": "Retrieve received SMS",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/getsms/?apikey={{apiKey}}&onlyunread=yes",
+            "description": "Returns received SMS synchronized from connected mobiles."
+          }
+        },
+        {
+          "name": "List SMS sent through API",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/log/sent/sms/?apikey={{apiKey}}",
+            "description": "Inspect queued, sent and error information for API-submitted SMS."
+          }
+        },
+        {
+          "name": "List SMS sent manually from mobile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/log/sent/frommobile/?apikey={{apiKey}}&period=last_7days&limit=200",
+            "description": "Lists supported SMS activity originating directly on the connected mobile."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Devices",
+      "item": [
+        {
+          "name": "List connected mobiles",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/gateway/mobile/list/?apikey={{apiKey}}",
+            "description": "Use the returned SID to select a sender in supported operations."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Calls",
+      "item": [
+        {
+          "name": "List missed calls",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/call/missed/list/?apikey={{apiKey}}&offset=0&limit=100"
+          }
+        },
+        {
+          "name": "List incoming calls",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/call/incoming/list/?apikey={{apiKey}}&offset=0&limit=50&sort_dir=desc"
+          }
+        },
+        {
+          "name": "List outgoing calls",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/call/outgoing/list/?apikey={{apiKey}}&offset=0&limit=50&sort_dir=desc"
+          }
+        }
+      ]
+    },
+    {
+      "name": "WhatsApp",
+      "description": "Sending and consent-based received-message retrieval.",
+      "item": [
+        {
+          "name": "Send WhatsApp message",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "apikey", "value": "{{apiKey}}", "type": "text" },
+                { "key": "recipients", "value": "{{whatsAppRecipient}}", "type": "text" },
+                { "key": "message", "value": "Hello from the SMSMobileAPI Postman collection.", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/sendsms/?waonly=yes",
+            "description": "Requires a connected and enabled WhatsApp environment."
+          }
+        },
+        {
+          "name": "Check WhatsApp number",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/whatsapp/checknumber/?apikey={{apiKey}}&recipients={{whatsAppRecipient}}"
+          }
+        },
+        {
+          "name": "Activate incoming retrieval",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/getwa/active/?apikey={{apiKey}}&statut=1",
+            "description": "Inbound WhatsApp retrieval is disabled by default for privacy. Activation alone does not start synchronization."
+          }
+        },
+        {
+          "name": "Request synchronization window",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/getwa/synchronisation/?apikey={{apiKey}}",
+            "description": "Mandatory before retrieving newly received WhatsApp messages. The response contains the window expiry."
+          }
+        },
+        {
+          "name": "Retrieve synchronized messages",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/getwa/?apikey={{apiKey}}",
+            "description": "Run after an explicit synchronization request has been processed."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "Send mobile notification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "apikey", "value": "{{apiKey}}", "type": "text" },
+                { "key": "sid", "value": "{{deviceSid}}", "type": "text" },
+                { "key": "title", "value": "Order ready", "type": "text" },
+                { "key": "message", "value": "Order #1042 is ready for collection.", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/notification/send"
+          }
+        },
+        {
+          "name": "List notification history",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/notification/list/?apikey={{apiKey}}&sidentifiant={{deviceSid}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Email",
+      "item": [
+        {
+          "name": "Send email",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "apikey", "value": "{{apiKey}}", "type": "text" },
+                { "key": "apikeybox", "value": "{{mailboxKey}}", "type": "text" },
+                { "key": "sender_name", "value": "Example Team", "type": "text" },
+                { "key": "sender_email", "value": "{{senderEmail}}", "type": "text" },
+                { "key": "recipient_email", "value": "{{recipientEmail}}", "type": "text" },
+                { "key": "mail_subject", "value": "Order confirmation", "type": "text" },
+                { "key": "mail_body", "value": "Your order has been confirmed.", "type": "text" },
+                { "key": "allow_self_signed", "value": "no", "type": "text" }
+              ]
+            },
+            "url": "{{baseUrl}}/sendemail/"
+          }
+        },
+        {
+          "name": "Retrieve inbox",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": "{{baseUrl}}/getemail/?apikey={{apiKey}}&apikeybox={{mailboxKey}}&mbox=INBOX&start=0"
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "https://api.smsmobileapi.com", "type": "string" }
+  ]
+}
